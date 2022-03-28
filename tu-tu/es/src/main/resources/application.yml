@@ -1,0 +1,85 @@
+server:
+  servlet:
+    context-path: /search
+  tomcat:
+    max-threads: 300
+spring:
+  application:
+    name: search
+  profiles:
+    active: test
+  datasource:
+    type: com.alibaba.druid.pool.DruidDataSource
+    druid:
+      initial-size: 10  #初始连接数
+      min-idle: 5
+      max-active: 100   #最大连接数
+      max-wait: 60000 # 配置获取连接等待超时的时间，单位是毫秒
+      time-between-eviction-runs-millis: 60000  # 配置间隔多久才进行一次检测，检测需要关闭的空闲连接，单位是毫秒
+      min-evictable-idle-time-millis: 300000    # 配置一个连接在池中最小生存的时间，单位是毫秒
+      validation-query: SELECT 1 FROM DUAL
+      test-while-idle: true
+      test-on-borrow: false
+      test-on-return: false
+      pool-prepared-statements: true
+      ### 配置监控统计拦截的filters，去掉后监控界面sql无法统计，'wall'用于防火墙
+      #spring.datasource.filters=stat,wall,log4j
+  jackson:
+    time-zone: GMT+8
+    date-format: yyyy-MM-dd HH:mm:ss
+
+mybatis-plus:
+  mapper-locations: classpath:/mapper/*Mapper.xml
+  type-aliases-package: com.cetus.securitydemo.entity  #MyBaits 别名包扫描路径
+  type-enums-package: com.cetus.securitydemo.enmu
+  configuration:
+    auto-mapping-unknown-column-behavior: WARNING #指定 MyBatis 在自动映射过程中遇到未知列或者未知属性时是否以日志的形式打印相关警告信息
+  global-config:
+    worker-id: 0  #机器 ID 部分(影响雪花ID)
+    datacenter-id: 1  #数据标识 ID 部分(影响雪花ID)
+
+feign:
+  hystrix:
+    enabled: true
+    ## 配置httpclient线程池
+  httpclient:
+    enabled: true
+  okhttp:
+    enabled: false
+  compression:
+    request:
+      enabled: true # 配置请求GZIP压缩
+      mime-types: ["text/xml","application/xml","application/json"] # 配置压缩支持的MIME TYPE
+      min-request-size: 2048 # 配置压缩数据大小的下限
+    response:
+      enabled: true # 配置响应GZIP压缩
+
+hystrix:
+  threadpool:
+    default:
+      coreSize: 200 #设置feign的核心线程池的数量
+  command:
+    default:
+      fallback:
+        isolation:
+          semaphore:
+            maxConcurrentRequests: 50 #设置回退的最大线程数
+      circuitBreaker:
+        requestVolumeThreshold: 500 #设置熔断器失败的个数
+      execution:
+        isolation:
+          thread:
+            timeoutInMilliseconds: 1000  # 设置熔断超时时间  default 1000
+        timeout:
+          enabled: true # 打开超时熔断功能 default true
+ribbon:
+  ConnectTimeout: 1000 # 设置连接超时时间 default 2000
+  ReadTimeout: 1000    # 设置读取超时时间  default 5000
+  OkToRetryOnAllOperations: true # 对所有操作请求都进行重试  default false
+  MaxAutoRetriesNextServer: 1    # 切换实例的重试次数  default 1
+  MaxAutoRetries: 1     # 对当前实例的重试次数 default 0
+management:
+  endpoints:
+    web:
+      exposure:
+        include: '*'
